@@ -7,7 +7,7 @@ import pygmaps
 # Create your views here.
 def index(request):	
 	mymap = pygmaps.maps(20.680329,-103.348732,17)
-	mapa = mymap.scriptmap() 
+	mapa = mymap.script_drawmap() 
 	miubicacion = mymap.script_self_point()
 	c = Context({'drawselfpoint':miubicacion,'drawmap':mapa})
 	t = get_template("mimapa.html")

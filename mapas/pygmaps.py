@@ -113,9 +113,55 @@ class maps:
 	#############################################
 	# # # # Low level Strings Map Drawing # # # # 
 	#############################################
-	
+	def scrip_draw(self):
+		f=[]
+		f.append('<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>\n')
+		f.append('<script type="text/javascript">\n')
+		f.append('\tfunction initialize() {\n')
+		f.append(self.script_drawmap())
+		f.append(self.script_self_point())
+		f.append(self.script_drawgrids(f))
+		f.append(self.script_drawpoints(f))
+		f.append(self.script_drawradpoints(f))
+		f.append(self.script_drawpaths(f,self.paths))
+		f.append('\t}\n')
+		f.append('</script>\n')
+		f=''.join(f)
+		return f
 
- 	def scriptmap(self):
+	def script_drawgrids(self, f):
+		if self.gridsetting == None:
+			return
+		slat = self.gridsetting[0]
+		elat = self.gridsetting[1]
+		latin = self.gridsetting[2]
+		slng = self.gridsetting[3]
+		elng = self.gridsetting[4]
+		lngin = self.gridsetting[5]
+		self.grids = []
+
+		r = [slat+float(x)*latin for x in range(0, int((elat-slat)/latin))]
+		for lat in r:
+			self.grids.append([(lat+latin/2.0,slng+lngin/2.0),(lat+latin/2.0,elng+lngin/2.0)])
+
+		r = [slng+float(x)*lngin for x in range(0, int((elng-slng)/lngin))]
+		for lng in r:
+			self.grids.append([(slat+latin/2.0,lng+lngin/2.0),(elat+latin/2.0,lng+lngin/2.0)])
+		
+		for line in self.grids:
+			self.script_drawPolyline(f,line,strokeColor = "#000000")
+
+
+	def script_drawpoints(self,f):
+		for point in  self.points:
+			self.script_drawpoint(f,point[0],point[1],point[2])
+
+	def script_drawradpoints(self, f):
+		for rpoint in self.radpoints:
+			path = self.getcycle(rpoint[0:3])
+			self.script_drawPolygon(f,path,strokeColor = rpoint[3])
+
+ 	def script_drawmap(self):
 		f=[]
 		f.append('\t\tvar centerlatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);\n')
 		f.append('\t\tvar myOptions = {\n')
@@ -128,7 +174,13 @@ class maps:
 		f=''.join(f)
 		return f
 
-	def scriptself_point(self):
+	def script_drawpaths(self, f, paths):
+		for path in paths:
+			#print path
+			self.script_drawPolyline(f,path[:-1], strokeColor = path[-1])
+	
+
+	def script_self_point(self):
 		f=[]
 		f.append('\t\tvar marker = new google.maps.Marker({\n')
 		f.append('\t\tposition: centerlatlng,\n')
@@ -138,7 +190,7 @@ class maps:
 		f=''.join(f)
  		return f
 
-	def drawpoint(self,f,lat,lon,color):
+	def script_drawpoint(self,f,lat,lon,color):
 		f=[]
 		f.append('\t\tvar latlng = new google.maps.LatLng(%f, %f);\n'%(lat,lon))
 		f.append('\t\tvar img = new google.maps.MarkerImage(\'%s\');\n' % (self.coloricon.replace('XXXXXX',color)))
@@ -151,6 +203,67 @@ class maps:
 		f.append('\n')
 		f=''.join(f)
 		return f
+
+
+	def script_drawPolyline(self,f,path,\
+			clickable = False, \
+			geodesic = True,\
+			strokeColor = "#FF0000",\
+			strokeOpacity = 1.0,\
+			strokeWeight = 2
+			):
+		f=[]
+		f.append('var PolylineCoordinates = [\n')
+		for coordinate in path:
+			f.append('new google.maps.LatLng(%f, %f),\n' % (coordinate[0],coordinate[1]))
+		f.append('];\n')
+		f.append('\n')
+
+		f.append('var Path = new google.maps.Polyline({\n')
+		f.append('clickable: %s,\n' % (str(clickable).lower()))
+		f.append('geodesic: %s,\n' % (str(geodesic).lower()))
+		f.append('path: PolylineCoordinates,\n')
+		f.append('strokeColor: "%s",\n' %(strokeColor))
+		f.append('strokeOpacity: %f,\n' % (strokeOpacity))
+		f.append('strokeWeight: %d\n' % (strokeWeight))
+		f.append('});\n')
+		f.append('\n')
+		f.append('Path.setMap(map);\n')
+		f.append('\n\n')
+		f=''.join(f)
+		return f
+
+	def script_drawPolygon(self,f,path,\
+			clickable = False, \
+			geodesic = True,\
+			fillColor = "#000000",\
+			fillOpacity = 0.0,\
+			strokeColor = "#FF0000",\
+			strokeOpacity = 1.0,\
+			strokeWeight = 1
+			):
+		f.append('var coords = [\n')
+		for coordinate in path:
+			f.append('new google.maps.LatLng(%f, %f),\n' % (coordinate[0],coordinate[1]))
+		f.append('];\n')
+		f.append('\n')
+
+		f.append('var polygon = new google.maps.Polygon({\n')
+		f.append('clickable: %s,\n' % (str(clickable).lower()))
+		f.append('geodesic: %s,\n' % (str(geodesic).lower()))
+		f.append('fillColor: "%s",\n' %(fillColor))
+		f.append('fillOpacity: %f,\n' % (fillOpacity))
+		f.append('paths: coords,\n')
+		f.append('strokeColor: "%s",\n' %(strokeColor))
+		f.append('strokeOpacity: %f,\n' % (strokeOpacity))
+		f.append('strokeWeight: %d\n' % (strokeWeight))
+		f.append('});\n')
+		f.append('\n')
+		f.append('polygon.setMap(map);\n')
+		f.append('\n\n')
+		f=''.join(f)
+		return f
+
 
 	#############################################
 	# # # # # # Low level Map Drawing # # # # # # 

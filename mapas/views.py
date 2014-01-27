@@ -8,7 +8,7 @@ import pygmaps
 def index(request):	
 	mymap = pygmaps.maps(20.680329,-103.348732,17)
 	mapa = mymap.scriptmap() 
-	miubicacion = mymap.scriptself_point()
+	miubicacion = mymap.script_self_point()
 	c = Context({'drawselfpoint':miubicacion,'drawmap':mapa})
 	t = get_template("mimapa.html")
 	html = t.render(c)

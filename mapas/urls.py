@@ -1,8 +1,8 @@
 from django.conf.urls import patterns, include, url
 # from mapas.views
 # Uncomment the next two lines to enable the admin:
-# from django.contrib import admin
-# admin.autodiscover()
+from django.contrib import admin
+admin.autodiscover()
 
 urlpatterns = patterns('mapas.views',
     # Examples:
@@ -13,7 +13,7 @@ urlpatterns = patterns('mapas.views',
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    # url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', include(admin.site.urls)),
     url(r'^$', 'index'),
     url(r'^mapa/(\d+\.?\d*)/(\d+\.?\d*)/$','mapa'),
     url(r'^busca/(\d+\.?\d*)/(\d+\.?\d*)/(\w+\_?\w*)/$','busca'),
